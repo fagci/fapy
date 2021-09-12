@@ -34,9 +34,13 @@ def random_wan_ips(count):
         yield _ntoa(_pack('>I', intip))
 
 
+def _result_filter(r):
+    return bool(r[0]) if isinstance(r, tuple) else bool(r)
+
+
 def netrandom(check_fn,
               result_fn=print,
-              filter_fn=bool,
+              filter_fn=_result_filter,
               limit=1000000,
               workers=512,
               start_cb=lambda: None,
@@ -107,8 +111,8 @@ def path_checker(path, port=80, ssl=False, timeout=2, body_re=''):
         if not 200 <= code < 300 and code != 999:
             code, body = _chp(host, port, path, ssl=ssl, timeout=timeout)
             if body_re and _findall(body_re, body.decode(errors='ignore')):
-                return 200 <= code < 300
+                return 200 <= code < 300, body
 
-        return False
+        return False, b''
 
     return f
