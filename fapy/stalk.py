@@ -40,8 +40,6 @@ def netrandom(checker: Type[Checker], limit=1000000, workers=512):
 
     checker.set_generator(random_wan_ips(limit))
 
-    results = []
-
     for _ in range(workers):
         t = checker()
         threads.append(t)
@@ -63,4 +61,4 @@ def netrandom(checker: Type[Checker], limit=1000000, workers=512):
     except KeyboardInterrupt:
         sys.stderr.write('\rKilled\n')
 
-    return results
+    return []
