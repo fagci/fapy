@@ -1,3 +1,4 @@
+from html.parser import HTMLParser as _HTMLParser
 from pathlib import Path as _Path
 from random import randrange as _rndrange
 from re import sub as _sub
@@ -78,6 +79,18 @@ class ListFile(list):
         is_path = isinstance(file_path, _Path)
         with file_path.open() if is_path else open(file_path) as f:
             self.extend(ln.rstrip() for ln in f)
+
+
+class LinksParser(_HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.matches = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a':
+            for name, value in attrs:
+                if name == 'href':
+                    self.matches.append(value)
 
 
 def _replace_range_part(r):
