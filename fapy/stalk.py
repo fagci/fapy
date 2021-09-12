@@ -58,7 +58,7 @@ def netrandom_process(check_fn,
 
             res = check_fn(ip)
             with print_lock:
-                print_fn(res)
+                print_fn(ip, res)
 
     for _ in range(workers):
         t = Thread(target=wrapped)
@@ -94,3 +94,23 @@ def check_spa(host, port=80, ssl=False, timeout=2):
                          verify=False,
                          timeout=timeout)
     return 200 <= code < 300
+
+
+def path_checker(path, port, ssl=False, timeout=2):
+    def f(host):
+        code, _ = check_path(host,
+                             port,
+                             random_path(),
+                             ssl=ssl,
+                             verify=False,
+                             timeout=timeout)
+        if not 200 <= code < 300 and code != 999:
+            code, _ = check_path(host,
+                                 port,
+                                 path,
+                                 ssl=ssl,
+                                 verify=False,
+                                 timeout=timeout)
+            return 200 <= code < 300
+
+    return f
