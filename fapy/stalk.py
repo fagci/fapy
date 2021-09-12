@@ -29,3 +29,56 @@ def random_wan_ips(count):
             continue
         count -= 1
         yield _ntoa(_pack('>I', intip))
+
+
+def netrandom_process(check_fn,
+                      print_fn=print,
+                      limit=1000000,
+                      workers=512,
+                      start_cb=lambda: None,
+                      stop_cb=lambda: None):
+    from threading import Thread, Event, Lock
+    import sys
+
+    threads = []
+    running = Event()
+    gen_lock = Lock()
+    print_lock = Lock()
+    generator = random_wan_ips(limit)
+
+    def wrapped():
+        while running.is_set():
+            try:
+                with gen_lock:
+                    ip = next(generator)
+            except StopIteration:
+                break
+
+            res = check_fn(ip)
+            with print_lock:
+                print_fn(res)
+
+    for _ in range(workers):
+        t = Thread(target=wrapped)
+        threads.append(t)
+
+    running.set()
+
+    start_cb()
+
+    try:
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    except KeyboardInterrupt:
+        running.clear()
+        sys.stderr.write('\rStopping...\n')
+
+    try:
+        for t in threads:
+            t.join()
+    except KeyboardInterrupt:
+        sys.stderr.write('\rKilled\n')
+
+    stop_cb()
