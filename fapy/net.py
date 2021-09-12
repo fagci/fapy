@@ -44,13 +44,14 @@ def check_addr(addr: tuple, timeout=1, iface: str = None):
 
 def http_connection(host: str, port=80, ssl=False, verify=False, timeout=2):
     if ssl:
-        if verify:
-            c = HTTPSConnection(host, port, timeout=timeout)
-        else:
-            c = HTTPSConnection(host, port, context=_cuc(), timeout=timeout)
+        return (
+            HTTPSConnection(host, port, timeout=timeout)
+            if verify
+            else HTTPSConnection(host, port, context=_cuc(), timeout=timeout)
+        )
+
     else:
-        c = HTTPConnection(host, port, timeout=timeout)
-    return c
+        return HTTPConnection(host, port, timeout=timeout)
 
 
 def http_request(connection: HTTPConnection, path, headers: dict = HEADERS):
