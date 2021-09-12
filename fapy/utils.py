@@ -1,3 +1,4 @@
+from pathlib import Path as _Path
 from random import randrange as _rndrange
 from re import sub as _sub
 
@@ -57,6 +58,25 @@ def from_base(s, b=62):
 def is_binary(data: bytes):
     tc = set(range(7, 14)) | {27} | set(range(0x20, 0x100)) - {0x7f}
     return bool(data.translate(None, bytearray(tc)))
+
+
+def normalize_uri(uri, base, scheme='http'):
+    if uri.startswith('//'):
+        uri = '%s:%s' % (scheme, uri)
+    elif uri.startswith('/'):
+        uri = '%s%s' % (base, uri)
+    elif not uri.startswith(('http://', 'https://')):
+        # maybe wrong solution for paths: level1/level2.html
+        uri = '%s/%s' % (base, uri)
+    return uri
+
+
+class ListFile(list):
+    """Make list from file"""
+    def __init__(self, file_path):
+        is_path = isinstance(file_path, _Path)
+        with file_path.open() if is_path else open(file_path) as f:
+            self.extend(ln.rstrip() for ln in f)
 
 
 def _replace_range_part(r):
