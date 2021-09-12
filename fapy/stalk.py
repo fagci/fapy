@@ -35,6 +35,7 @@ def random_wan_ips(count):
 
 def netrandom_process(check_fn,
                       print_fn=print,
+                      filter_fn=bool,
                       limit=1000000,
                       workers=512,
                       start_cb=lambda: None,
@@ -57,8 +58,9 @@ def netrandom_process(check_fn,
                 break
 
             res = check_fn(ip)
-            with print_lock:
-                print_fn(ip, res)
+            if filter_fn(res):
+                with print_lock:
+                    print_fn(ip, res)
 
     for _ in range(workers):
         t = Thread(target=wrapped)
@@ -96,7 +98,7 @@ def check_spa(host, port=80, ssl=False, timeout=2):
     return 200 <= code < 300
 
 
-def path_checker(path, port, ssl=False, timeout=2):
+def path_checker(path, port=80, ssl=False, timeout=2):
     def f(host):
         code, _ = check_path(host,
                              port,
