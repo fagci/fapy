@@ -33,7 +33,7 @@ def random_wan_ips(count):
         yield _ntoa(_pack('>I', intip))
 
 
-def netrandom_process(check_fn,
+def netrandom(check_fn,
                       print_fn=print,
                       filter_fn=bool,
                       limit=1000000,
