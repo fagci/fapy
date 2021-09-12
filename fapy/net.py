@@ -46,7 +46,7 @@ def check_path(host,
                path='/',
                headers=HEADERS,
                ssl=False,
-               verify=True,
+               verify=False,
                timeout=2):
     if ssl:
         from http.client import HTTPSConnection

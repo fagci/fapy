@@ -1,8 +1,9 @@
 from random import randint as _randint
+from re import findall as _findall
 from socket import inet_ntoa as _ntoa
 from struct import pack as _pack
 
-from fapy.net import check_path
+from fapy.net import check_path as _chp
 
 from .utils import random_lower_str
 
@@ -34,12 +35,12 @@ def random_wan_ips(count):
 
 
 def netrandom(check_fn,
-                      print_fn=print,
-                      filter_fn=bool,
-                      limit=1000000,
-                      workers=512,
-                      start_cb=lambda: None,
-                      stop_cb=lambda: None):
+              result_fn=print,
+              filter_fn=bool,
+              limit=1000000,
+              workers=512,
+              start_cb=lambda: None,
+              stop_cb=lambda: None):
     from threading import Thread, Event, Lock
     import sys
 
@@ -48,6 +49,7 @@ def netrandom(check_fn,
     gen_lock = Lock()
     print_lock = Lock()
     generator = random_wan_ips(limit)
+    results = []
 
     def wrapped():
         while running.is_set():
@@ -60,7 +62,8 @@ def netrandom(check_fn,
             res = check_fn(ip)
             if filter_fn(res):
                 with print_lock:
-                    print_fn(ip, res)
+                    results.append((ip, res))
+                    result_fn(ip, res)
 
     for _ in range(workers):
         t = Thread(target=wrapped)
@@ -86,33 +89,26 @@ def netrandom(check_fn,
         sys.stderr.write('\rKilled\n')
 
     stop_cb()
+    return results
 
 
 def check_spa(host, port=80, ssl=False, timeout=2):
-    code, _ = check_path(host,
-                         port,
-                         random_path(),
-                         ssl=ssl,
-                         verify=False,
-                         timeout=timeout)
+    path = random_path()
+    code, _ = _chp(host, port, path, ssl=ssl, verify=False, timeout=timeout)
     return 200 <= code < 300
 
 
-def path_checker(path, port=80, ssl=False, timeout=2):
+def path_checker(path, port=80, ssl=False, timeout=2, body_re=''):
     def f(host):
-        code, _ = check_path(host,
-                             port,
-                             random_path(),
-                             ssl=ssl,
-                             verify=False,
-                             timeout=timeout)
+        _path = random_path()
+
+        code, _ = _chp(host, port, _path, ssl=ssl, timeout=timeout)
+
         if not 200 <= code < 300 and code != 999:
-            code, _ = check_path(host,
-                                 port,
-                                 path,
-                                 ssl=ssl,
-                                 verify=False,
-                                 timeout=timeout)
-            return 200 <= code < 300
+            code, body = _chp(host, port, path, ssl=ssl, timeout=timeout)
+            if body_re and _findall(body_re, body.decode(errors='ignore')):
+                return 200 <= code < 300
+
+        return False
 
     return f
