@@ -46,21 +46,24 @@ def check_path(host,
                path='/',
                headers=HEADERS,
                ssl=False,
-               verify=True):
+               verify=True,
+               timeout=2):
     if ssl:
         from http.client import HTTPSConnection
         if verify:
-            c = HTTPSConnection(host, port)
+            c = HTTPSConnection(host, port, timeout=timeout)
         else:
-            c = HTTPSConnection(host, port, context=_cuc())
+            c = HTTPSConnection(host, port, context=_cuc(), timeout=timeout)
     else:
         from http.client import HTTPConnection
-        c = HTTPConnection(host, port)
+        c = HTTPConnection(host, port, timeout=timeout)
 
     try:
         c.request('GET', path, headers=headers)
         r = c.getresponse()
         return r.status, r.read()
+    except KeyboardInterrupt:
+        raise
     except:
         return 999, b''
 
