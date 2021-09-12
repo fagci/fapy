@@ -1,12 +1,12 @@
-from random import randint
-from socket import inet_ntoa
-from struct import pack
+from random import randint as _randint
+from socket import inet_ntoa as _ntoa
+from struct import pack as _pack
 
 
 def wan_ip(count):
     """Get random WAN IP addresses"""
     while count:
-        intip = randint(0x1000000, 0xE0000000)
+        intip = _randint(0x1000000, 0xE0000000)
         if (0xa000000 <= intip <= 0xaffffff
                 or 0x64400000 <= intip <= 0x647fffff
                 or 0x7f000000 <= intip <= 0x7fffffff
@@ -22,4 +22,4 @@ def wan_ip(count):
                 or 0xf0000000 <= intip <= 0xffffffff):
             continue
         count -= 1
-        yield inet_ntoa(pack('>I', intip))
+        yield _ntoa(_pack('>I', intip))
