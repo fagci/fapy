@@ -1,5 +1,6 @@
 from random import randint as _randint, shuffle as _shuffle
 from socket import SOL_SOCKET, SO_BINDTODEVICE, SO_LINGER, inet_ntoa as _ntoa, socket
+from ssl import CERT_REQUIRED, _create_unverified_context as _cuc
 from struct import pack as _pack
 from time import sleep as _sleep, time as _time
 
@@ -42,7 +43,6 @@ def check_path(host,
         if verify:
             c = HTTPSConnection(host, port)
         else:
-            from ssl import _create_unverified_context as _cuc
             c = HTTPSConnection(host, port, context=_cuc())
     else:
         from http.client import HTTPConnection
@@ -54,6 +54,23 @@ def check_path(host,
         return r.status, r.read()
     except:
         return 999, b''
+
+
+def domains_from_cert(hostname, port: int = 443, timeout: float = 10):
+    from socket import create_connection
+
+    ctx = _cuc(cert_reqs=CERT_REQUIRED)
+    addr = (hostname, port)
+
+    try:
+        with create_connection(addr, timeout=timeout) as connection:
+            with ctx.wrap_socket(connection, server_hostname=hostname) as c:
+                ssl_info = c.getpeercert() or {}
+                return [v for _, v in ssl_info.get('subjectAltName', [])]
+    except:
+        pass
+
+    return []
 
 
 def wan_ip(count):
