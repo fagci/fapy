@@ -66,40 +66,52 @@ class Checker(Thread):
 
 
 class PathChecker(Checker):
-    path = ''
-    port = 80
-    ssl = False
-    timeout = 2
-    inc_re = ''
-    exc_re = ''
+    _path = ''
+    _port = 80
+    _ssl = False
+    _timeout = 2
+    _inc_re = ''
+    _exc_re = ''
 
     def check(self, ip):
-        _path = self.random_path()
-        _c = http_connection(ip, self.port, self.ssl, timeout=self.timeout)
+        _spa_path = self.random_path()
+        _c = http_connection(ip, self._port, self._ssl, timeout=self._timeout)
 
         # check for SPA
-        code, _ = http_request(_c, _path)
+        code, _ = http_request(_c, _spa_path)
 
         if 200 <= code < 300 or code == 999:
             return b''
 
         # check target path
-        code, body = http_request(_c, self.path)
+        code, body = http_request(_c, self._path)
 
         if not 200 <= code < 300:
             return b''
 
-        if self.exc_re:
+        if self._exc_re:
             text = body.decode(errors='ignore')
-            if _findall(self.exc_re, text, _I):
+            if _findall(self._exc_re, text, _I):
                 return b''
 
-        if self.inc_re:
+        if self._inc_re:
             text = body.decode(errors='ignore')
-            if not _findall(self.inc_re, text, _I):
+            if not _findall(self._inc_re, text, _I):
                 return b''
 
         return body
+
+    @classmethod
+    def set_path(cls, path):
+        cls._path = path
+
+    @classmethod
+    def set_include_pattern(cls, reg):
+        cls._inc_re = reg
+
+    @classmethod
+    def set_exclude_pattern(cls, reg):
+        cls._exc_re = reg
 
     @staticmethod
     def random_path(min_len=8, max_len=12):
