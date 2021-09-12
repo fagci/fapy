@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='fapy',
-    version='0.0.14',
+    version='0.0.15',
     description='''fagci's python library''',
     url='https://github.com/fagci/fapy/',
 

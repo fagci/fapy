@@ -2,6 +2,8 @@ from random import randint as _randint
 from socket import inet_ntoa as _ntoa
 from struct import pack as _pack
 
+from fapy.net import check_path
+
 from .utils import random_lower_str
 
 
@@ -82,3 +84,13 @@ def netrandom_process(check_fn,
         sys.stderr.write('\rKilled\n')
 
     stop_cb()
+
+
+def check_spa(host, port=80, ssl=False, timeout=2):
+    code, _ = check_path(host,
+                         port,
+                         random_path(),
+                         ssl=ssl,
+                         verify=False,
+                         timeout=timeout)
+    return 200 <= code < 300
