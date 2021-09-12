@@ -1,3 +1,4 @@
+from random import randrange as _rndrange
 from re import sub as _sub
 
 
@@ -26,6 +27,16 @@ def fmt_bytes(num, suf='B'):
             return "%3.1f %s%s" % (num, unit, suf)
         num /= 1024.0
     return "%.1f %s%s" % (num, 'Yi', suf)
+
+
+def random_lower_alpha():
+    return chr(_rndrange(ord('a'), ord('z')))
+
+
+def random_lower_str(min_len: int = 3, max_len: int = 16):
+    return ''.join(random_lower_alpha()
+                   for _ in range(_rndrange(min_len, max_len)))
+
 
 
 def _replace_range_part(r):
