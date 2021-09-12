@@ -39,15 +39,18 @@ def random_wan_ips(count):
 def print_result(ip, data):
     print(ip)
 
+    if is_binary(data):
+        text = '<binary data> %s' % fmt_bytes(len(data))
+    else:
+        text = data.decode(errors='ignore')
+
     # not redirected
     if _sys.stdout.isatty():
-        if is_binary(data):
-            print('<binary data>', fmt_bytes(len(data)))
-        else:
-            print(data.decode(errors='ignore'), end='\n---\n')
+        print(text, end='\n---\n')
     # redirected
     else:
-        _sys.stderr.write('%s\n' % ip)
+        # duplicate ip, print data on screen
+        _sys.stderr.write('%s\n%s\n---\n' % (ip, text))
         _sys.stderr.flush()
 
 
