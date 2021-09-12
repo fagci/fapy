@@ -1,17 +1,9 @@
 from random import randint as _randint
-from re import I as _I, findall as _findall
 from socket import inet_ntoa as _ntoa
 from struct import pack as _pack
-import sys as _sys
+from typing import Type
 
-from fapy.net import check_path as _chp
-from fapy.utils import fmt_bytes, is_binary, random_lower_str
-
-
-def random_path(min_len=8, max_len=12):
-    """Get random path. Mainly used to determine 
-    single page applications (SPA) or honeypots"""
-    return '/%s' % random_lower_str(min_len, max_len)
+from fapy.checkers import Checker
 
 
 def random_wan_ips(count):
@@ -36,65 +28,25 @@ def random_wan_ips(count):
         yield _ntoa(_pack('>I', intip))
 
 
-def print_result(ip, data):
-    print(ip)
-
-    if is_binary(data):
-        text = '<binary data> %s' % fmt_bytes(len(data))
-    else:
-        text = data.decode(errors='ignore')
-
-    # not redirected
-    if _sys.stdout.isatty():
-        print(text, end='\n---\n')
-    # redirected
-    else:
-        # duplicate ip, print data on screen
-        _sys.stderr.write('%s\n%s\n---\n' % (ip, text))
-        _sys.stderr.flush()
-
-
-def netrandom(check_fn,
-              result_fn=print_result,
-              filter_fn=bool,
-              limit=1000000,
-              workers=512,
-              start_cb=lambda: None,
-              stop_cb=lambda: None):
+def netrandom(checker: Type[Checker], limit=1000000, workers=512):
     """Make netrandom checks with check_fn,
     filtering results with filter_fn,
     then process results by result_fn"""
-    from threading import Thread, Event, Lock
     import sys
+    if type(checker) is Checker:
+        raise ValueError('Checker must be Checker type (not an instance).')
 
     threads = []
-    running = Event()
-    gen_lock = Lock()
-    print_lock = Lock()
-    generator = random_wan_ips(limit)
+
+    checker.set_generator(random_wan_ips(limit))
+
     results = []
 
-    def wrapped():
-        while running.is_set():
-            try:
-                with gen_lock:
-                    ip = next(generator)
-            except StopIteration:
-                break
-
-            res = check_fn(ip)
-            if filter_fn(res):
-                with print_lock:
-                    results.append((ip, res))
-                    result_fn(ip, res)
-
     for _ in range(workers):
-        t = Thread(target=wrapped)
+        t = checker()
         threads.append(t)
 
-    running.set()
-
-    start_cb()
+    checker.set_running(True)
 
     try:
         for t in threads:
@@ -102,7 +54,7 @@ def netrandom(check_fn,
         for t in threads:
             t.join()
     except KeyboardInterrupt:
-        running.clear()
+        checker.set_running(False)
         sys.stderr.write('\rStopping...\n')
 
     try:
@@ -111,43 +63,4 @@ def netrandom(check_fn,
     except KeyboardInterrupt:
         sys.stderr.write('\rKilled\n')
 
-    stop_cb()
     return results
-
-
-def check_spa(host, port=80, ssl=False, timeout=2):
-    path = random_path()
-    code, _ = _chp(host, port, path, ssl=ssl, verify=False, timeout=timeout)
-    return 200 <= code < 300
-
-
-def path_checker(path, port=80, ssl=False, timeout=2, inc_re='', exc_re=''):
-    """Create check path function to use with netrandom()"""
-    def f(host):
-        _path = random_path()
-
-        # check for SPA
-        code, _ = _chp(host, port, _path, ssl=ssl, timeout=timeout)
-
-        if 200 <= code < 300 or code == 999:
-            return b''
-
-        # check target path
-        code, body = _chp(host, port, path, ssl=ssl, timeout=timeout)
-
-        if not 200 <= code < 300:
-            return b''
-
-        if exc_re:
-            text = body.decode(errors='ignore')
-            if _findall(exc_re, text, _I):
-                return b''
-
-        if inc_re:
-            text = body.decode(errors='ignore')
-            if not _findall(inc_re, text, _I):
-                return b''
-
-        return body
-
-    return f

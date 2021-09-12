@@ -1,3 +1,4 @@
+from http.client import HTTPConnection, HTTPSConnection
 from random import shuffle as _shuffle
 from socket import (
     SOL_SOCKET,
@@ -41,31 +42,31 @@ def check_addr(addr: tuple, timeout=1, iface: str = None):
             break
 
 
-def check_path(host,
-               port=80,
-               path='/',
-               headers=HEADERS,
-               ssl=False,
-               verify=False,
-               timeout=2):
+def http_connection(host: str, port=80, ssl=False, verify=False, timeout=2):
     if ssl:
-        from http.client import HTTPSConnection
         if verify:
             c = HTTPSConnection(host, port, timeout=timeout)
         else:
             c = HTTPSConnection(host, port, context=_cuc(), timeout=timeout)
     else:
-        from http.client import HTTPConnection
         c = HTTPConnection(host, port, timeout=timeout)
+    return c
 
+
+def http_request(connection: HTTPConnection, path, headers: dict = HEADERS):
     try:
-        c.request('GET', path, headers=headers)
-        r = c.getresponse()
-        return r.status, r.read()
+        connection.request('GET', path, headers=headers)
+        response = connection.getresponse()
+        return response.status, response.read()
     except KeyboardInterrupt:
         raise
     except:
         return 999, b''
+
+
+def check_path(host, port=80, path='/', headers=HEADERS, ssl=False, timeout=2):
+    c = http_connection(host, port, ssl, False, timeout)
+    return http_request(c, path, headers)
 
 
 def domains_from_cert(hostname, port: int = 443, timeout: float = 10):
