@@ -2,10 +2,10 @@ from random import randint as _randint
 from re import I as _I, findall as _findall
 from socket import inet_ntoa as _ntoa
 from struct import pack as _pack
+import sys as _sys
 
 from fapy.net import check_path as _chp
-
-from .utils import random_lower_str
+from fapy.utils import fmt_bytes, is_binary, random_lower_str
 
 
 def random_path(min_len=8, max_len=12):
@@ -36,8 +36,23 @@ def random_wan_ips(count):
         yield _ntoa(_pack('>I', intip))
 
 
+def print_result(ip, data):
+    print(ip)
+
+    # not redirected
+    if _sys.stdout.isatty():
+        if is_binary(data):
+            print('<binary data>', fmt_bytes(len(data)))
+        else:
+            print(data.decode(errors='ignore'), end='\n---\n')
+    # redirected
+    else:
+        _sys.stderr.write('%s\n' % ip)
+        _sys.stderr.flush()
+
+
 def netrandom(check_fn,
-              result_fn=print,
+              result_fn=print_result,
               filter_fn=bool,
               limit=1000000,
               workers=512,
