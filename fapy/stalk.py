@@ -9,7 +9,9 @@ from .utils import random_lower_str
 
 
 def random_path(min_len=8, max_len=12):
-    return random_lower_str(min_len, max_len)
+    """Get random path. Mainly used to determine 
+    single page applications (SPA) or honeypots"""
+    return '/%s' % random_lower_str(min_len, max_len)
 
 
 def random_wan_ips(count):
@@ -45,6 +47,9 @@ def netrandom(check_fn,
               workers=512,
               start_cb=lambda: None,
               stop_cb=lambda: None):
+    """Make netrandom checks with check_fn,
+    filtering results with filter_fn,
+    then process results by result_fn"""
     from threading import Thread, Event, Lock
     import sys
 
@@ -103,6 +108,7 @@ def check_spa(host, port=80, ssl=False, timeout=2):
 
 
 def path_checker(path, port=80, ssl=False, timeout=2, inc_re='', exc_re=''):
+    """Create check path function to use with netrandom()"""
     def f(host):
         _path = random_path()
 
