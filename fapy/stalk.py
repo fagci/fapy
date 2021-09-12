@@ -1,5 +1,5 @@
 from random import randint as _randint
-from re import MULTILINE as _MULTILINE, findall as _findall
+from re import I as _I, findall as _findall
 from socket import inet_ntoa as _ntoa
 from struct import pack as _pack
 
@@ -102,7 +102,7 @@ def check_spa(host, port=80, ssl=False, timeout=2):
     return 200 <= code < 300
 
 
-def path_checker(path, port=80, ssl=False, timeout=2, body_re=''):
+def path_checker(path, port=80, ssl=False, timeout=2, inc_re='', exc_re=''):
     def f(host):
         _path = random_path()
 
@@ -118,9 +118,14 @@ def path_checker(path, port=80, ssl=False, timeout=2, body_re=''):
         if not 200 <= code < 300:
             return False, b''
 
-        if body_re:
+        if exc_re:
             text = body.decode(errors='ignore')
-            if not _findall(body_re, text, _MULTILINE):
+            if _findall(exc_re, text, _I):
+                return False, b''
+
+        if inc_re:
+            text = body.decode(errors='ignore')
+            if not _findall(inc_re, text, _I):
                 return False, b''
 
         return True, body
