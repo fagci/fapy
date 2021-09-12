@@ -60,14 +60,14 @@ def is_binary(data: bytes):
     return bool(data.translate(None, bytearray(tc)))
 
 
-def normalize_uri(uri, base, scheme='http'):
+def normalize_uri(uri, base, current, scheme='http'):
     if uri.startswith('//'):
         uri = '%s:%s' % (scheme, uri)
     elif uri.startswith('/'):
         uri = '%s%s' % (base, uri)
     elif not uri.startswith(('http://', 'https://')):
         # maybe wrong solution for paths: level1/level2.html
-        uri = '%s/%s' % (base, uri)
+        uri = '%s/%s' % (current, uri)
     if uri.startswith(base):
         return uri
 
