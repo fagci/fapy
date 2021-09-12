@@ -68,7 +68,8 @@ def normalize_uri(uri, base, scheme='http'):
     elif not uri.startswith(('http://', 'https://')):
         # maybe wrong solution for paths: level1/level2.html
         uri = '%s/%s' % (base, uri)
-    return uri
+    if uri.startswith(base):
+        return uri
 
 
 class ListFile(list):
