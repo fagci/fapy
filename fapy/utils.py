@@ -38,6 +38,26 @@ def random_lower_str(min_len: int = 3, max_len: int = 16):
                    for _ in range(_rndrange(min_len, max_len)))
 
 
+def to_base(s, b=62):
+    s = int(s)
+    res = ''
+    BS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    while s:
+        res += BS[s % b]
+        s //= b
+    return res[::-1] or '0'
+
+
+def from_base(s, b=62):
+    s = str(s)
+    BS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    return sum(b**i * BS.find(c) for i, c in enumerate(s[::-1]))
+
+
+def is_binary(data: bytes):
+    tc = set(range(7, 14)) | {27} | set(range(0x20, 0x100)) - {0x7f}
+    return bool(data.translate(None, bytearray(tc)))
+
 
 def _replace_range_part(r):
     return ','.join(map(str, range(int(r[1]), int(r[2]))))
