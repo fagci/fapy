@@ -9,7 +9,7 @@ def random_path(min_len=8, max_len=12):
     return random_lower_str(min_len, max_len)
 
 
-def random_wan_ip(count):
+def random_wan_ips(count):
     """Get random WAN IP addresses"""
     while count:
         intip = _randint(0x1000000, 0xE0000000)
