@@ -44,11 +44,8 @@ def check_addr(addr: tuple, timeout=1, iface: str = None):
 
 def http_connection(host: str, port=80, ssl=False, verify=False, timeout=2):
     if ssl:
-        return (
-            HTTPSConnection(host, port, timeout=timeout)
-            if verify
-            else HTTPSConnection(host, port, context=_cuc(), timeout=timeout)
-        )
+        return (HTTPSConnection(host, port, timeout=timeout) if verify else
+                HTTPSConnection(host, port, context=_cuc(), timeout=timeout))
 
     else:
         return HTTPConnection(host, port, timeout=timeout)
@@ -67,7 +64,9 @@ def http_request(connection: HTTPConnection, path, headers: dict = HEADERS):
 
 def check_path(host, port=80, path='/', headers=HEADERS, ssl=False, timeout=2):
     c = http_connection(host, port, ssl, False, timeout)
-    return http_request(c, path, headers)
+    res = http_request(c, path, headers)
+    c.close()
+    return res
 
 
 def domains_from_cert(hostname, port: int = 443, timeout: float = 10):

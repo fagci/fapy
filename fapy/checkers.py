@@ -81,10 +81,12 @@ class PathChecker(Checker):
         code, _ = http_request(_c, _spa_path)
 
         if 200 <= code < 300 or code == 999:
+            _c.close()
             return b''
 
         # check target path
         code, body = http_request(_c, self._path)
+        _c.close()
 
         if not 200 <= code < 300:
             return b''
