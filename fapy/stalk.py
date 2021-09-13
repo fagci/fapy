@@ -29,9 +29,7 @@ def random_wan_ips(count):
 
 
 def netrandom(checker: Type[Checker], limit=1000000, workers=512):
-    """Make netrandom checks with check_fn,
-    filtering results with filter_fn,
-    then process results by result_fn"""
+    """Make netrandom checks with checker"""
     import sys
     if type(checker) is Checker:
         raise ValueError('Checker must be Checker type (not an instance).')
